@@ -1,7 +1,9 @@
 org 0x7e00
 jmp 0x0000:start
 
-helloWorld db 'Hello Romildo', 13, 10, 0
+intro db 'Bem-vindx ax sistemx!', 13, 10, 0
+choose db 'Escolha sua opcao: ', 13, 10, 0
+menu db '1 - Cadastrar nova conta', 13, 10, '2 - Buscar conta', 13, 10, '3 - Editar conta', 13, 10, '4 - Deletar conta', 13, 10, '5 - Listar agencias', 13, 10, '6 - Listar contas de uma agencia', 13, 10, 0
 
 start:
     ; setup
@@ -18,7 +20,7 @@ start:
     mov bl,1110b ; seta cor
     ;call readString
 
-	mov si, helloWorld
+	mov si, menu
 	call printString
 
     jmp halt
