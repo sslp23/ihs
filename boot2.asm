@@ -1,5 +1,5 @@
 org 0x500
-jmp 0x0000:start ; TROCAR PARA «start» PARA APARECER A ANIMAÇAO!!!
+jmp 0x0000:load_menu ; TROCAR PARA «start» PARA APARECER A ANIMAÇAO!!!
 
 
 str1 db 'Carregando estrutura para o kernel...',10, 13, 0
