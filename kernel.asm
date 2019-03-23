@@ -37,10 +37,10 @@ ler_opcao:
 	call editar_conta
 
 	cmp al, '4'
-	je del_conta
+	call del_conta
 
 	cmp al, '5'
-	je list_agencias
+	call list_agencias
 
 	cmp al, '6'
 	call list_contas_agencias
@@ -50,10 +50,8 @@ ler_opcao:
 
 	jmp begin
 
-
 cadastro_conta:
 	ret
-
 
 buscar_conta:
 	ret
@@ -75,7 +73,6 @@ getchar:
 	int 16h
 	ret
 
-
 ; imprime a string que esta em <si>
 printString:
 	mov al,byte[si]
@@ -85,6 +82,7 @@ printString:
 	int 10h
 	inc si
 	jmp printString
+
 return:
 	ret
 
@@ -134,3 +132,4 @@ doneRead:
 
 halt:
     jmp $
+
