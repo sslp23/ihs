@@ -1,11 +1,10 @@
 org 0x7e00
-jmp 0x0000:start
+jmp 0x0000:_start
 
-intro db 'Bem-vindx ax sistemx!', 13, 10, 0
-choose db 'Escolha sua opcao: ', 13, 10, 0
-menu db '1 - Cadastrar nova conta', 13, 10, '2 - Buscar conta', 13, 10, '3 - Editar conta', 13, 10, '4 - Deletar conta', 13, 10, '5 - Listar agencias', 13, 10, '6 - Listar contas de uma agencia', 13, 10, '0 - Sair', 13, 10, 0
+section .text
+	global _start
 
-start:
+_start:
     ; setup
     xor ax, ax    ; ax <- 0
     mov ds, ax    ; ds <- 0
@@ -28,22 +27,22 @@ ler_opcao:
 	call getchar
 
 	cmp al, '1'
-	call cadastro_conta
+	je cadastro_conta
 
 	cmp al, '2'
-	call buscar_conta
+	je buscar_conta
 
 	cmp al, '3'
-	call editar_conta
+	je editar_conta
 
 	cmp al, '4'
-	call del_conta
+	je del_conta
 
 	cmp al, '5'
-	call list_agencias
+	je list_agencias
 
 	cmp al, '6'
-	call list_contas_agencias
+	je list_contas_agencias
 
 	cmp al, '0'
 	je halt
@@ -51,22 +50,37 @@ ler_opcao:
 	jmp begin
 
 cadastro_conta:
-	ret
+	call clear_screen
+	call readString
+
+    mov ax, TABLE_COLUMSIZE ; numero de colunas por linha
+    mov bx, 1 ; linha desejada (1)
+    mul bx
+
+    mov bx, banco_dados
+    add bx, ax ; apontar para linha 1
+    add bx, 20 ; apontar para coluna 20 
+    
+    mov bx, si
+	jmp ler_opcao
 
 buscar_conta:
-	ret
+	call clear_screen
+	mov si, banco_dados
+	call printString
+	jmp ler_opcao
 	
 editar_conta:
-	ret
+	jmp ler_opcao
 
 del_conta:
-	ret
+	jmp ler_opcao
 
 list_agencias:
-	ret
+	jmp ler_opcao
 
 list_contas_agencias:
-	ret
+	jmp ler_opcao
 
 getchar:
 	mov ah, 0
@@ -79,6 +93,7 @@ printString:
 	cmp al,0
 	je return
 	mov ah,0xe
+	mov bh, 0
 	int 10h
 	inc si
 	jmp printString
@@ -98,6 +113,7 @@ readString:
 	je backspace
 
 	mov ah,0xe
+	mov bh, 0
 	int 10h
 	mov byte[si],al
 	inc si
@@ -133,3 +149,29 @@ doneRead:
 halt:
     jmp $
 
+; limpa a tela
+clear_screen:
+	mov ah, 0
+	mov al, 12h
+	int 10h
+	call reset_cursor
+	ret
+
+; move o cursor para 0, 0
+reset_cursor:
+	mov ah, 2
+	mov bh, 0
+	mov dh, 0
+	mov dl, 0
+	int 10h
+	ret
+
+section .data
+intro db 'Bem-vindo ao sistema!', 13, 10, 0
+choose db 'Escolha sua opcao: ', 13, 10, 0
+menu db '1 - Cadastrar nova conta', 13, 10, '2 - Buscar conta', 13, 10, '3 - Editar conta', 13, 10, '4 - Deletar conta', 13, 10, '5 - Listar agencias', 13, 10, '6 - Listar contas de uma agencia', 13, 10, '0 - Sair', 13, 10, 0
+
+; reservar espaço do array
+TABLE_COLUMSIZE equ 40
+TABLE_ROWSIZE equ 64
+banco_dados resb TABLE_COLUMSIZE * TABLE_ROWSIZE
