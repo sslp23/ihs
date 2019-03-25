@@ -4,6 +4,27 @@ jmp 0x0000:_start
 section .text
     global _start
 
+
+; aponta <bx> para a linha e coluna especificada em <cx>, <dx> do banco de dados
+%macro apontar_banco 2
+    push cx
+    push dx
+    mov cx, %1
+    mov dx, %2
+    call apontar_array_banco
+    pop dx
+    pop cx
+%endmacro
+apontar_array_banco:
+    mov ax, TABLE_COLUMSIZE ; numero de colunas por linha
+    mov bx, cx ; linha desejada
+    mul bx
+
+    mov bx, banco_dados
+    add bx, ax ; apontar para linha
+    add bx, dx ; apontar para coluna
+    ret
+
 _start:
     ; setup
     xor ax, ax    ; ax <- 0
@@ -53,24 +74,27 @@ cadastro_conta:
     call clear_screen
     call readString
 
-    mov ax, TABLE_COLUMSIZE ; numero de colunas por linha
-    mov bx, 1 ; linha desejada (1)
-    mul bx
-
-    mov bx, banco_dados
-    add bx, ax ; apontar para linha 1
-    add bx, 20 ; apontar para coluna 20 
+    apontar_banco 0, 0
+    mov [bx], si
     
-    mov bx, si
     jmp ler_opcao
 
 buscar_conta:
     call clear_screen
-    mov si, banco_dados
+
+    apontar_banco 0, 0
+    mov si, bx
     call printString
+
     jmp ler_opcao
     
 editar_conta:
+    call clear_screen
+
+    apontar_banco 1, 0
+    mov si, bx
+    call printString
+
     jmp ler_opcao
 
 del_conta:
