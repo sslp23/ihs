@@ -2,7 +2,7 @@ org 0x7e00
 jmp 0x0000:_start
 
 section .text
-	global _start
+    global _start
 
 _start:
     ; setup
@@ -20,38 +20,38 @@ begin:
 
     ;call readString
 
-	mov si, menu
-	call printString
-	
+    mov si, menu
+    call printString
+    
 ler_opcao:
-	call getchar
+    call getchar
 
-	cmp al, '1'
-	je cadastro_conta
+    cmp al, '1'
+    je cadastro_conta
 
-	cmp al, '2'
-	je buscar_conta
+    cmp al, '2'
+    je buscar_conta
 
-	cmp al, '3'
-	je editar_conta
+    cmp al, '3'
+    je editar_conta
 
-	cmp al, '4'
-	je del_conta
+    cmp al, '4'
+    je del_conta
 
-	cmp al, '5'
-	je list_agencias
+    cmp al, '5'
+    je list_agencias
 
-	cmp al, '6'
-	je list_contas_agencias
+    cmp al, '6'
+    je list_contas_agencias
 
-	cmp al, '0'
-	je halt
+    cmp al, '0'
+    je halt
 
-	jmp begin
+    jmp begin
 
 cadastro_conta:
-	call clear_screen
-	call readString
+    call clear_screen
+    call readString
 
     mov ax, TABLE_COLUMSIZE ; numero de colunas por linha
     mov bx, 1 ; linha desejada (1)
@@ -62,109 +62,109 @@ cadastro_conta:
     add bx, 20 ; apontar para coluna 20 
     
     mov bx, si
-	jmp ler_opcao
+    jmp ler_opcao
 
 buscar_conta:
-	call clear_screen
-	mov si, banco_dados
-	call printString
-	jmp ler_opcao
-	
+    call clear_screen
+    mov si, banco_dados
+    call printString
+    jmp ler_opcao
+    
 editar_conta:
-	jmp ler_opcao
+    jmp ler_opcao
 
 del_conta:
-	jmp ler_opcao
+    jmp ler_opcao
 
 list_agencias:
-	jmp ler_opcao
+    jmp ler_opcao
 
 list_contas_agencias:
-	jmp ler_opcao
+    jmp ler_opcao
 
 getchar:
-	mov ah, 0
-	int 16h
-	ret
+    mov ah, 0
+    int 16h
+    ret
 
 ; imprime a string que esta em <si>
 printString:
-	mov al,byte[si]
-	cmp al,0
-	je return
-	mov ah,0xe
-	mov bh, 0
-	int 10h
-	inc si
-	jmp printString
+    mov al,byte[si]
+    cmp al,0
+    je return
+    mov ah,0xe
+    mov bh, 0
+    int 10h
+    inc si
+    jmp printString
 
 return:
-	ret
+    ret
 
 ; le string do teclado
 ; salva o resultado no endereco apontado por <si>
 readString:
-	mov ah,0
-	int 16h
-	cmp al,13
-	je doneRead
+    mov ah,0
+    int 16h
+    cmp al,13
+    je doneRead
 
-	cmp al,8
-	je backspace
+    cmp al,8
+    je backspace
 
-	mov ah,0xe
-	mov bh, 0
-	int 10h
-	mov byte[si],al
-	inc si
-	jmp readString
+    mov ah,0xe
+    mov bh, 0
+    int 10h
+    mov byte[si],al
+    inc si
+    jmp readString
 
 backspace:
-	dec si
-	mov al,0
-	mov byte[si],al
-	mov al,8
-	mov ah,0xe
-	mov bl,0x6
-	int 10h
-	mov al,0
-	mov ah,0xe
-	mov bl,0x6
-	int 10h
-	mov al,8
-	mov ah,0xe
-	mov bl,0x6
-	int 10h
-	jmp readString
+    dec si
+    mov al,0
+    mov byte[si],al
+    mov al,8
+    mov ah,0xe
+    mov bl,0x6
+    int 10h
+    mov al,0
+    mov ah,0xe
+    mov bl,0x6
+    int 10h
+    mov al,8
+    mov ah,0xe
+    mov bl,0x6
+    int 10h
+    jmp readString
 
 doneRead:
-	mov al,13
-	mov ah,0xe
-	mov bl,0x6
-	int 10h
-	mov al,10
-	int 10h
-	ret
+    mov al,13
+    mov ah,0xe
+    mov bl,0x6
+    int 10h
+    mov al,10
+    int 10h
+    ret
 
 halt:
     jmp $
 
 ; limpa a tela
 clear_screen:
-	mov ah, 0
-	mov al, 12h
-	int 10h
-	call reset_cursor
-	ret
+    mov ah, 0
+    mov al, 12h
+    int 10h
+    call reset_cursor
+    ret
 
 ; move o cursor para 0, 0
 reset_cursor:
-	mov ah, 2
-	mov bh, 0
-	mov dh, 0
-	mov dl, 0
-	int 10h
-	ret
+    mov ah, 2
+    mov bh, 0
+    mov dh, 0
+    mov dl, 0
+    int 10h
+    ret
 
 section .data
 intro db 'Bem-vindo ao sistema!', 13, 10, 0
