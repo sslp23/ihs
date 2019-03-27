@@ -1,0 +1,9 @@
+» tabela de cores «
+00H black     08H gray
+01H blue      09H bright blue
+02H green     0aH bright green
+03H cyan      0bH bright cyan
+04H red       0cH bright red
+05H magenta   0dH bright magenta
+06H brown     0eH yellow
+07H white     0fH bright white

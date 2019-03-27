@@ -5,25 +5,19 @@ section .text
     global _start
 
 
-; aponta <bx> para a linha e coluna especificada em <cx>, <dx> do banco de dados
+; aponta <bx> para a linha e coluna especificada 
+;
+; linha: entrada do banco
+; coluna: informacoes de uma entrada
 %macro apontar_banco 2
-    push cx
-    push dx
-    mov cx, %1
-    mov dx, %2
-    call apontar_array_banco
-    pop dx
-    pop cx
-%endmacro
-apontar_array_banco:
     mov ax, TABLE_COLUMSIZE ; numero de colunas por linha
-    mov bx, cx ; linha desejada
+    mov bx, %1 ; linha desejada
     mul bx
 
     mov bx, banco_dados
     add bx, ax ; apontar para linha
-    add bx, dx ; apontar para coluna
-    ret
+    add bx, %2 ; apontar para coluna
+%endmacro
 
 _start:
     ; setup
@@ -38,13 +32,13 @@ begin:
     mov al, 12h
     int 10h
     mov bl, 1110b ; seta cor
-
-    ;call readString
+    
+ler_opcao:
+    call clear_screen
 
     mov si, menu
     call printString
-    
-ler_opcao:
+
     call getchar
 
     cmp al, '1'
@@ -70,30 +64,62 @@ ler_opcao:
 
     jmp begin
 
-cadastro_conta:
+; edita uma conta
+editar_conta:
     call clear_screen
-    call readString
 
-    apontar_banco 0, 0
-    mov [bx], si
+    ; aponta <bx> para o endereco do banco
+    apontar_banco free_index, 0
+
+    ; incrementar o num do index livre
+    inc word [free_index]
     
-    jmp ler_opcao
+    ; numero de caracteres para o nome
+    mov cx, 5
+
+    .for:
+        call getchar
+        mov [bx], al ; salvar caractere
+        inc bx ; proxima coluna do vetor
+        dec cx
+
+        ; printar o char
+        call print_char
+
+        cmp cx, 0 ; 20 caracteres lidos
+        jz .end
+
+        cmp al, 13 ; enter pressionado
+        je .end
+
+        jmp .for
+
+    .end:
+        jmp ler_opcao
+
+; printa o char em <al>
+print_char:
+    push bx
+    mov ah, 0xe
+    mov bh, 0
+    mov bl, 02H
+    int 10h
+    pop bx
+    ret
 
 buscar_conta:
     call clear_screen
 
-    apontar_banco 0, 0
+    apontar_banco free_index, 0
+
     mov si, bx
     call printString
 
+    call getchar
     jmp ler_opcao
     
-editar_conta:
-    call clear_screen
-
-    apontar_banco 1, 0
-    mov si, bx
-    call printString
+cadastro_conta:
+    call editar_conta
 
     jmp ler_opcao
 
@@ -106,6 +132,7 @@ list_agencias:
 list_contas_agencias:
     jmp ler_opcao
 
+; salva char em <al>
 getchar:
     mov ah, 0
     int 16h
@@ -113,13 +140,12 @@ getchar:
 
 ; imprime a string que esta em <si>
 printString:
-    mov al,byte[si]
+    lodsb
     cmp al,0
     je return
     mov ah,0xe
     mov bh, 0
     int 10h
-    inc si
     jmp printString
 
 return:
@@ -147,14 +173,17 @@ backspace:
     dec si
     mov al,0
     mov byte[si],al
+
     mov al,8
     mov ah,0xe
     mov bl,0x6
     int 10h
+
     mov al,0
     mov ah,0xe
     mov bl,0x6
     int 10h
+    
     mov al,8
     mov ah,0xe
     mov bl,0x6
@@ -195,7 +224,12 @@ intro db 'Bem-vindo ao sistema!', 13, 10, 0
 choose db 'Escolha sua opcao: ', 13, 10, 0
 menu db '1 - Cadastrar nova conta', 13, 10, '2 - Buscar conta', 13, 10, '3 - Editar conta', 13, 10, '4 - Deletar conta', 13, 10, '5 - Listar agencias', 13, 10, '6 - Listar contas de uma agencia', 13, 10, '0 - Sair', 13, 10, 0
 
+title_cadastro db 'Insira o nome da conta', 13, 10, 0
+
 ; reservar espaço do array
 TABLE_COLUMSIZE equ 40
 TABLE_ROWSIZE equ 64
 banco_dados resb TABLE_COLUMSIZE * TABLE_ROWSIZE
+
+; index livre para o banco de dados
+free_index dw 0
