@@ -5,7 +5,11 @@ section .text
     global _start
 
 
+; muda a cor do texto
+%define stcolor(color) mov byte [current_text_color], color
+
 ; aponta <bx> para a linha e coluna especificada 
+; aponta |current_index| para <bx>
 ;
 ; linha: entrada do banco
 ; coluna: informacoes de uma entrada
@@ -17,6 +21,9 @@ section .text
     mov bx, banco_dados
     add bx, ax ; apontar para linha
     add bx, %2 ; apontar para coluna
+
+    ; salvar o index atual
+    mov [current_index], bx
 %endmacro
 
 _start:
@@ -36,6 +43,7 @@ begin:
 ler_opcao:
     call clear_screen
 
+    stcolor(COLOR_MAIN)
     mov si, menu
     call printString
 
@@ -66,19 +74,58 @@ ler_opcao:
 
 ; edita uma conta
 editar_conta:
-    call clear_screen
-
     ; aponta <bx> para o endereco do banco
     apontar_banco free_index, 0
 
-    ; incrementar o num do index livre
-    inc word [free_index]
-    
-    ; numero de caracteres para o nome
-    mov cx, 5
+    ; nome
+    .read_nome:
+        call clear_screen
+        mov si, title_cadastro_nome
+        call print_ln
 
-    .for:
+        mov cx, SIZE_NOME
+        call .read
+
+    ; pular os caracteres do nome (e um delimitador)
+    mov bx, current_index + OFFSET_CPF
+    
+    ; cpf
+    .read_cpf:
+        call clear_screen
+        mov si, title_cadastro_cpf
+        call print_ln
+
+        mov cx, 11
+        call .read
+
+    mov bx, current_index + OFFSET_AGENCIA
+
+    ; agencia
+    .read_agencia:
+        call clear_screen
+        mov si, title_cadastro_agencia
+        call print_ln
+
+        mov cx, 5
+        call .read
+
+    mov bx, current_index + OFFSET_CONTA
+
+    ; conta
+    .read_conta:
+        call clear_screen
+        mov si, title_cadastro_conta
+        call print_ln
+
+        mov cx, 6
+        call .read
+
+    ; final
+    jmp .end
+
+    .read:
         call getchar
+        stcolor(COLOR_ALT)
         mov [bx], al ; salvar caractere
         inc bx ; proxima coluna do vetor
         dec cx
@@ -86,37 +133,90 @@ editar_conta:
         ; printar o char
         call print_char
 
-        cmp cx, 0 ; 20 caracteres lidos
-        jz .end
+        ; <cx> = numero de caracteres para o campo
+        cmp cx, 0 ; max de caracteres lidos
+        je .return
 
         cmp al, 13 ; enter pressionado
-        je .end
+        je .return
 
-        jmp .for
-
+        jmp .read
+    
     .end:
+        ; incrementar o num do index livre
+        inc word [free_index]
         jmp ler_opcao
 
-; printa o char em <al>
-print_char:
-    push bx
-    mov ah, 0xe
-    mov bh, 0
-    mov bl, 02H
-    int 10h
-    pop bx
-    ret
+    .return:
+        stcolor(COLOR_MAIN)
+        ret
 
 buscar_conta:
     call clear_screen
 
-    apontar_banco free_index, 0
+    apontar_banco free_index - 1, 0
 
-    mov si, bx
-    call printString
+    call print_conta.print_cpf
 
     call getchar
     jmp ler_opcao
+
+; imprime a conta que esta em |current_index|
+print_conta:
+    call clear_screen
+
+     ; nome
+    .print_nome:
+        stcolor(COLOR_MAIN)
+        mov si, title_cadastro_nome
+        call print_ln
+
+        stcolor(COLOR_ALT)
+        mov bx, current_index
+        mov si, bx
+        call print_ln
+    
+    ; cpf
+    .print_cpf:
+        stcolor(COLOR_MAIN)
+        mov si, title_cadastro_cpf
+        call print_ln
+
+        ; pular os caracteres do nome (e um delimitador)
+        stcolor(COLOR_ALT)
+        mov bx, current_index + OFFSET_CPF
+        mov si, bx
+        call print_ln
+
+    ; agencia
+    .print_agencia:
+        stcolor(COLOR_MAIN)
+        mov si, title_cadastro_agencia
+        call print_ln
+
+        ; pular os caracteres do nome (e um delimitador)
+        stcolor(COLOR_ALT)
+        mov bx, current_index + OFFSET_AGENCIA
+        mov si, bx
+        call print_ln
+
+    ; conta
+    .print_conta:
+        stcolor(COLOR_MAIN)
+        mov si, title_cadastro_conta
+        call print_ln
+
+        ; pular os caracteres do nome (e um delimitador)
+        stcolor(COLOR_ALT)
+        mov bx, current_index + OFFSET_CONTA
+        mov si, bx
+        call print_ln
+
+    ; final
+    jmp .end
+
+    .end:
+        ret
     
 cadastro_conta:
     call editar_conta
@@ -138,15 +238,44 @@ getchar:
     int 16h
     ret
 
+; printa o char em <al>
+print_char:
+    push bx
+    mov ah, 0xe
+    mov bh, 0
+    mov bl, [current_text_color]
+    int 10h
+    pop bx
+    ret
+
 ; imprime a string que esta em <si>
 printString:
-    lodsb
-    cmp al,0
-    je return
-    mov ah,0xe
-    mov bh, 0
-    int 10h
-    jmp printString
+    push bx
+
+    .print:
+        lodsb
+        cmp al, 0
+        je .end
+        mov ah, 0xe
+        mov bh, 0
+        mov bl, [current_text_color]
+        int 10h
+        jmp .print
+
+    .end:
+        pop bx
+        ret
+
+; imprime o que esta em <si> e imprime uma nova linha
+print_ln:
+    push ax
+    call printString
+    mov al, 13
+    call print_char
+    mov al, 10
+    call print_char
+    pop ax
+    ret
 
 return:
     ret
@@ -204,19 +333,25 @@ halt:
 
 ; limpa a tela
 clear_screen:
+    push ax
     mov ah, 0
     mov al, 12h
     int 10h
+    pop ax
     call reset_cursor
     ret
 
 ; move o cursor para 0, 0
 reset_cursor:
+    push ax
+    push bx
     mov ah, 2
     mov bh, 0
     mov dh, 0
     mov dl, 0
     int 10h
+    pop bx
+    pop ax
     ret
 
 section .data
@@ -224,12 +359,34 @@ intro db 'Bem-vindo ao sistema!', 13, 10, 0
 choose db 'Escolha sua opcao: ', 13, 10, 0
 menu db '1 - Cadastrar nova conta', 13, 10, '2 - Buscar conta', 13, 10, '3 - Editar conta', 13, 10, '4 - Deletar conta', 13, 10, '5 - Listar agencias', 13, 10, '6 - Listar contas de uma agencia', 13, 10, '0 - Sair', 13, 10, 0
 
-title_cadastro db 'Insira o nome da conta', 13, 10, 0
+title_cadastro_nome db 'Nome da conta (20 caracteres):', 0
+title_cadastro_cpf db 'CPF (11 digitos):', 0
+title_cadastro_agencia db 'Agencia (5 digitos):', 0
+title_cadastro_conta db 'Conta (6 digitos):', 0
 
 ; reservar espaço do array
 TABLE_COLUMSIZE equ 40
 TABLE_ROWSIZE equ 64
 banco_dados resb TABLE_COLUMSIZE * TABLE_ROWSIZE
 
+SIZE_NOME equ 20
+SIZE_CPF equ 11
+SIZE_AGENCIA equ 6
+SIZE_CONTA equ 5
+
+OFFSET_NOME    equ 0
+OFFSET_CPF     equ OFFSET_NOME + SIZE_NOME + 2
+OFFSET_AGENCIA equ OFFSET_CPF + SIZE_CPF + 2
+OFFSET_CONTA   equ OFFSET_AGENCIA + SIZE_AGENCIA + 2
+
+COLOR_MAIN equ 0ah
+COLOR_ALT equ 07h
+
 ; index livre para o banco de dados
 free_index dw 0
+
+; index sendo editado atualmente
+current_index dw 0
+
+; cor do texto atual
+current_text_color db COLOR_MAIN
