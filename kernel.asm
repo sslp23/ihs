@@ -34,7 +34,8 @@ begin:
 
     stcolor(COLOR_MAIN)
     xor ax, ax
-    mov word [free_index], ax
+    mov word [free_index], 0
+    mov word [current_index], 0
     
 ler_opcao:
     call clear_screen
@@ -115,10 +116,13 @@ editar_conta:
 
         mov cx, SIZE_CONTA
         call read_char
+        jmp .end
     
     .end:
         ; incrementar o num do index livre
-        inc word [free_index]
+        mov cx, word [free_index]
+        inc cx
+        mov word [free_index], cx
         jmp ler_opcao
 
 buscar_conta:
@@ -130,9 +134,12 @@ buscar_conta:
     ; ler input
     mov cx, SIZE_CPF
     call read_char
+
+    mov word [string1], bx
+    sub word [string1], SIZE_CPF
+
     ; encontrar
     call conta.find
-
 
     cmp word [current_index], -1
     je .not_found
@@ -140,21 +147,21 @@ buscar_conta:
 
     ; conta encontrada
     .found:
-        call clear_screen
+        ;mov word [current_index], 0
         call conta.print
         jmp .end
 
     ; conta nao encontrada
     .not_found:
-        call clear_screen
+        ;call clear_screen
         mov si, title_search_not_found
-        call printString
+        call print_ln
         jmp .end
 
     .end:
 
-    call getchar
-    jmp ler_opcao
+    ;call getchar
+    jmp halt
 
 conta:
     ; encontra o index da conta com o cpf salvo em <bx>
@@ -162,29 +169,36 @@ conta:
     .find:
         ; numero de registros
         mov cx, word [free_index]
+        ;dec cx
         mov word [current_index], cx
 
-        ; salva CPF de busca em <cx>
-        mov cx, bx
+        add cx, '0'
+        mov al, cl
+        call print_char
+
+        jmp halt
+
+        call clear_screen
+        mov si, word [string1]
+        call print_ln
 
         .search_contas:
             ; CPF atual em <bx>
             apontar_banco word [current_index], OFFSET_CPF
             mov word [count], SIZE_CPF
-            mov ax, bx
+            mov word [string2], bx
+            sub word [string2], SIZE_CPF + 2
 
             .for:
+                dec word [count]
                 cmp word [count], 0
                 je .end ; cpf encontrado
-                dec word [count]
 
-                mov bx, cx
-                mov cx, [bx]
-                mov bx, ax
-                mov ax, [bx]
-                cmp cx, ax
-                dec cx
-                dec ax
+                mov ax, word [string1]
+                mov bx, word [string2]
+                inc word [string1]
+                inc word [string2]
+                cmp ax, bx
                 je .for
                 jne .next_conta
 
@@ -334,6 +348,7 @@ print_ln:
     call print_char
     mov al, 10
     call print_char
+    xor si, si
     pop ax
     ret
 
@@ -424,11 +439,11 @@ title_cadastro_agencia db 'Agencia (5 digitos):', 0
 title_cadastro_conta db 'Conta (6 digitos):', 0
 
 title_search_cpf db 'Insira o CPF da conta (11 digitos):', 0
-title_search_not_found db 'Conta nao encontrada!', 0
+title_search_not_found db 'Conta nao encontrada', 0
 
 ; reservar espaço do array
-TABLE_COLUMSIZE equ 100
-TABLE_ROWSIZE equ 20
+TABLE_COLUMSIZE equ SIZE_NOME + SIZE_CPF + SIZE_AGENCIA + SIZE_CONTA + 6
+TABLE_ROWSIZE equ 10
 banco_dados resb TABLE_COLUMSIZE * TABLE_ROWSIZE
 
 SIZE_NOME equ 20
@@ -452,7 +467,7 @@ count resw 1
 free_index resw 1
 
 ; index sendo editado atualmente
-current_index dw 0
+current_index resw 1
 
 ; cor do texto atual
 current_text_color resb 1
