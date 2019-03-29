@@ -108,6 +108,7 @@ opt_editar_conta:
         jmp .end
 
     .end:
+
     call getchar
     jmp ler_opcao
 
@@ -194,6 +195,17 @@ opt_buscar_conta:
     jmp ler_opcao
 
 conta:
+    .remove:
+        apontar_banco 0
+        mov cx, TABLE_COLUMSIZE
+
+        .remove_loop:
+            mov [bx], word 0
+            dec cx
+            inc bx
+            cmp cx, 0
+            jne .remove_loop
+            jmp .end
     ; prompta um CPF do usuario e salva em |string1|
     .read_cpf:
         mov si, title_search_cpf
@@ -316,6 +328,36 @@ opt_cadastro_conta:
     jmp ler_opcao
 
 opt_del_conta:
+    call clear_screen
+    ; prompt cpf
+    call conta.read_cpf
+
+    ; encontrar
+    call conta.find
+
+    cmp word [current_index], -1
+    je .not_found
+    jne .found
+
+    ; conta encontrada
+    .found: 
+        ; editar a conta
+        call conta.remove
+        call clear_screen
+        mov si, title_delete_success
+        call print_ln
+        jmp .end
+
+    ; conta nao encontrada
+    .not_found:
+        call clear_screen
+        mov si, title_search_not_found
+        call print_ln
+        jmp .end
+
+    .end:
+    
+    call getchar
     jmp ler_opcao
 
 opt_list_agencias:
@@ -485,6 +527,7 @@ title_cadastro_conta db 'Conta (6 digitos):', 0
 
 title_search_cpf db 'Insira o CPF da conta (11 digitos):', 0
 title_search_not_found db 'Conta nao encontrada', 0
+title_delete_success db 'Conta deletada com sucesso', 0
 
 title_search_ok db 'OK', 0
 
