@@ -145,13 +145,12 @@ buscar_conta:
 
     ; conta encontrada
     .found:
-        ;mov word [current_index], 0
         call conta.print
         jmp .end
 
     ; conta nao encontrada
     .not_found:
-        ;call clear_screen
+        call clear_screen
         mov si, title_search_not_found
         call print_ln
         jmp .end
@@ -167,36 +166,30 @@ conta:
     .find:
         ; numero de registros
         mov cx, word [free_index]
-        ;dec cx
+        dec cx
         mov word [current_index], cx
-
-        add cx, '0'
-        mov al, cl
-        call print_char
-
-        jmp halt
-
-        call clear_screen
-        mov si, word [string1]
-        call print_ln
 
         .search_contas:
             ; CPF atual em <bx>
             apontar_banco word [current_index], OFFSET_CPF
             mov word [count], SIZE_CPF
             mov word [string2], bx
-            sub word [string2], SIZE_CPF + 2
+            sub bx, SIZE_CPF + 2
+
+            lea si, [bx]
+            mov bx, word [string1]
+            lea di, [bx]
+            dec di
 
             .for:
-                dec word [count]
                 cmp word [count], 0
                 je .end ; cpf encontrado
+                dec word [count]
 
-                mov ax, word [string1]
-                mov bx, word [string2]
-                inc word [string1]
-                inc word [string2]
-                cmp ax, bx
+                inc di
+                lodsb
+
+                cmp al, [di]
                 je .for
                 jne .next_conta
 
@@ -438,6 +431,8 @@ title_cadastro_conta db 'Conta (6 digitos):', 0
 
 title_search_cpf db 'Insira o CPF da conta (11 digitos):', 0
 title_search_not_found db 'Conta nao encontrada', 0
+
+title_search_ok db 'OK', 0
 
 ; reservar espaço do array
 TABLE_COLUMSIZE equ SIZE_NOME + SIZE_CPF + SIZE_AGENCIA + SIZE_CONTA + 6
