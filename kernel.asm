@@ -87,12 +87,28 @@ opt_editar_conta:
     ; encontrar
     call conta.find
 
-    ; editar a conta
-    call editar_conta
+    cmp word [current_index], -1
+    je .not_found
+    jne .found
 
-    ; mostrar a nova conta no final
-    call conta.print
+    ; conta encontrada
+    .found: 
+        ; editar a conta
+        call editar_conta
 
+        ; mostrar a nova conta no final
+        call conta.print
+        jmp .end
+
+    ; conta nao encontrada
+    .not_found:
+        call clear_screen
+        mov si, title_search_not_found
+        call print_ln
+        jmp .end
+
+    .end:
+    call getchar
     jmp ler_opcao
 
 
