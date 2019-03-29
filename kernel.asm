@@ -80,7 +80,7 @@ editar_conta:
         call print_ln
 
         mov cx, SIZE_NOME
-        call .read
+        call read_char
 
     ; pular os caracteres do nome (e um delimitador)
     apontar_banco word [free_index], OFFSET_CPF
@@ -92,7 +92,7 @@ editar_conta:
         call print_ln
 
         mov cx, SIZE_CPF
-        call .read
+        call read_char
 
     apontar_banco word [free_index], OFFSET_AGENCIA
 
@@ -103,7 +103,7 @@ editar_conta:
         call print_ln
 
         mov cx, SIZE_AGENCIA
-        call .read
+        call read_char
 
     apontar_banco word [free_index], OFFSET_CONTA
 
@@ -114,11 +114,161 @@ editar_conta:
         call print_ln
 
         mov cx, SIZE_CONTA
-        call .read
+        call read_char
+    
+    .end:
+        ; incrementar o num do index livre
+        inc word [free_index]
+        jmp ler_opcao
 
-    ; final
-    jmp .end
+buscar_conta:
+    call clear_screen
 
+    mov si, title_search_cpf
+    call print_ln
+
+    ; ler input
+    mov cx, SIZE_CPF
+    call read_char
+    ; encontrar
+    call conta.find
+
+
+    cmp word [current_index], -1
+    je .not_found
+    jne .found
+
+    ; conta encontrada
+    .found:
+        call clear_screen
+        call conta.print
+        jmp .end
+
+    ; conta nao encontrada
+    .not_found:
+        call clear_screen
+        mov si, title_search_not_found
+        call printString
+        jmp .end
+
+    .end:
+
+    call getchar
+    jmp ler_opcao
+
+conta:
+    ; encontra o index da conta com o cpf salvo em <bx>
+    ; retorna index em <current_index>, ou -1 caso conta nao exista
+    .find:
+        ; numero de registros
+        mov cx, word [free_index]
+        mov word [current_index], cx
+
+        ; salva CPF de busca em <cx>
+        mov cx, bx
+
+        .search_contas:
+            ; CPF atual em <bx>
+            apontar_banco word [current_index], OFFSET_CPF
+            mov word [count], SIZE_CPF
+            mov ax, bx
+
+            .for:
+                cmp word [count], 0
+                je .end ; cpf encontrado
+                dec word [count]
+
+                mov bx, cx
+                mov cx, [bx]
+                mov bx, ax
+                mov ax, [bx]
+                cmp cx, ax
+                dec cx
+                dec ax
+                je .for
+                jne .next_conta
+
+            .next_conta:
+                dec word [current_index]
+                cmp word [current_index], -1
+                je .end
+                jne .search_contas
+    
+        jmp .end
+
+    ; imprime a conta que esta em |current_index|
+    .print:
+        call clear_screen
+
+        ; nome
+        .print_nome:
+            stcolor(COLOR_MAIN)
+            mov si, title_cadastro_nome
+            call print_ln
+
+            stcolor(COLOR_ALT)
+            apontar_banco word [current_index], OFFSET_NOME
+            mov si, bx
+            call print_ln
+        
+        ; cpf
+        .print_cpf:
+            stcolor(COLOR_MAIN)
+            mov si, title_cadastro_cpf
+            call print_ln
+
+            ; pular os caracteres do nome (e um delimitador)
+            stcolor(COLOR_ALT)
+            apontar_banco word [current_index], OFFSET_CPF
+            mov si, bx
+            call print_ln
+
+        ; agencia
+        .print_agencia:
+            stcolor(COLOR_MAIN)
+            mov si, title_cadastro_agencia
+            call print_ln
+
+            ; pular os caracteres do nome (e um delimitador)
+            stcolor(COLOR_ALT)
+            apontar_banco word [current_index], OFFSET_AGENCIA
+            mov si, bx
+            call print_ln
+
+        ; conta
+        .print_conta:
+            stcolor(COLOR_MAIN)
+            mov si, title_cadastro_conta
+            call print_ln
+
+            ; pular os caracteres do nome (e um delimitador)
+            stcolor(COLOR_ALT)
+            apontar_banco word [current_index], OFFSET_CONTA
+            mov si, bx
+            call print_ln
+
+        ; final
+        jmp .end
+
+    .end:
+        ret
+    
+cadastro_conta:
+    call editar_conta
+    jmp ler_opcao
+
+del_conta:
+    jmp ler_opcao
+
+list_agencias:
+    jmp ler_opcao
+
+list_contas_agencias:
+    jmp ler_opcao
+
+; salva o que for lido em <bx>
+; limite de caracteres definido por <cx>
+read_char:
     .read:
         call getchar
         mov [bx], al ; salvar caractere
@@ -137,92 +287,10 @@ editar_conta:
         je .return
 
         jmp .read
-    
-    .end:
-        ; incrementar o num do index livre
-        inc word [free_index]
-        jmp ler_opcao
 
     .return:
         stcolor(COLOR_MAIN)
         ret
-
-buscar_conta:
-    call print_conta
-
-    call getchar
-    jmp ler_opcao
-
-; imprime a conta que esta em |current_index|
-print_conta:
-    call clear_screen
-
-     ; nome
-    .print_nome:
-        stcolor(COLOR_MAIN)
-        mov si, title_cadastro_nome
-        call print_ln
-
-        stcolor(COLOR_ALT)
-        apontar_banco word [free_index], OFFSET_NOME
-        mov si, bx
-        call print_ln
-    
-    ; cpf
-    .print_cpf:
-        stcolor(COLOR_MAIN)
-        mov si, title_cadastro_cpf
-        call print_ln
-
-        ; pular os caracteres do nome (e um delimitador)
-        stcolor(COLOR_ALT)
-        apontar_banco word [free_index], OFFSET_CPF
-        mov si, bx
-        call print_ln
-
-    ; agencia
-    .print_agencia:
-        stcolor(COLOR_MAIN)
-        mov si, title_cadastro_agencia
-        call print_ln
-
-        ; pular os caracteres do nome (e um delimitador)
-        stcolor(COLOR_ALT)
-        apontar_banco word [free_index], OFFSET_AGENCIA
-        mov si, bx
-        call print_ln
-
-    ; conta
-    .print_conta:
-        stcolor(COLOR_MAIN)
-        mov si, title_cadastro_conta
-        call print_ln
-
-        ; pular os caracteres do nome (e um delimitador)
-        stcolor(COLOR_ALT)
-        apontar_banco word [free_index], OFFSET_CONTA
-        mov si, bx
-        call print_ln
-
-    ; final
-    jmp .end
-
-    .end:
-        ret
-    
-cadastro_conta:
-    call editar_conta
-
-    jmp ler_opcao
-
-del_conta:
-    jmp ler_opcao
-
-list_agencias:
-    jmp ler_opcao
-
-list_contas_agencias:
-    jmp ler_opcao
 
 ; salva char em <al>
 getchar:
@@ -355,9 +423,12 @@ title_cadastro_cpf db 'CPF (11 digitos):', 0
 title_cadastro_agencia db 'Agencia (5 digitos):', 0
 title_cadastro_conta db 'Conta (6 digitos):', 0
 
+title_search_cpf db 'Insira o CPF da conta (11 digitos):', 0
+title_search_not_found db 'Conta nao encontrada!', 0
+
 ; reservar espaço do array
 TABLE_COLUMSIZE equ 100
-TABLE_ROWSIZE equ 100
+TABLE_ROWSIZE equ 20
 banco_dados resb TABLE_COLUMSIZE * TABLE_ROWSIZE
 
 SIZE_NOME equ 20
@@ -372,6 +443,10 @@ OFFSET_CONTA   equ OFFSET_AGENCIA + SIZE_AGENCIA + 2
 
 COLOR_MAIN equ 0ah
 COLOR_ALT equ 07h
+
+string1 resw 1
+string2 resw 1
+count resw 1
 
 ; index livre para o banco de dados
 free_index resw 1
