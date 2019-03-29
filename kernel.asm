@@ -296,16 +296,18 @@ conta:
             call print_ln
 
         ; conta
-        .print_conta:
-            stcolor(COLOR_MAIN)
-            mov si, title_cadastro_conta
-            call print_ln
+        ; .print_conta:
+        ;     stcolor(COLOR_MAIN)
+        ;     mov si, title_cadastro_conta
+        ;     call print_ln
 
-            ; pular os caracteres do nome (e um delimitador)
-            stcolor(COLOR_ALT)
-            apontar_banco OFFSET_CONTA
-            mov si, bx
-            call print_ln
+        ;     ; pular os caracteres do nome (e um delimitador)
+        ;     stcolor(COLOR_ALT)
+        ;     apontar_banco OFFSET_CONTA
+        ;     mov si, bx
+        ;     call print_ln
+
+        apontar_banco OFFSET_CONTA
 
         ; final
         jmp .end
