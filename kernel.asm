@@ -47,32 +47,51 @@ ler_opcao:
     call getchar
 
     cmp al, '1'
-    je cadastro_conta
+    je opt_cadastro_conta
 
     cmp al, '2'
-    je buscar_conta
+    je opt_buscar_conta
 
     cmp al, '3'
-    je editar_conta
+    je opt_editar_conta
 
     cmp al, '4'
-    je del_conta
+    je opt_del_conta
 
     cmp al, '5'
-    je list_agencias
+    je opt_list_agencias
 
     cmp al, '6'
-    je list_contas_agencias
+    je opt_list_contas_agencias
 
     cmp al, '0'
     je halt
 
     jmp ler_opcao
 
-; edita uma conta
+; procura um CPF e edita a conta com este CPF
+opt_editar_conta:
+    call clear_screen
+
+    ; prompt cpf
+    call conta.read_cpf
+
+    ; encontrar
+    call conta.find
+
+    ; editar a conta
+    call editar_conta
+
+    ; mostrar a nova conta no final
+    call conta.print
+
+    jmp ler_opcao
+
+
+; edita a conta no index |current_index|
 editar_conta:
     ; aponta <bx> para o endereco do banco
-    apontar_banco word [free_index], OFFSET_NOME
+    apontar_banco word [current_index], OFFSET_NOME
     
     ; nome
     .read_nome:
@@ -84,7 +103,7 @@ editar_conta:
         call read_char
 
     ; pular os caracteres do nome (e um delimitador)
-    apontar_banco word [free_index], OFFSET_CPF
+    apontar_banco word [current_index], OFFSET_CPF
     
     ; cpf
     .read_cpf:
@@ -95,7 +114,7 @@ editar_conta:
         mov cx, SIZE_CPF
         call read_char
 
-    apontar_banco word [free_index], OFFSET_AGENCIA
+    apontar_banco word [current_index], OFFSET_AGENCIA
 
     ; agencia
     .read_agencia:
@@ -106,7 +125,7 @@ editar_conta:
         mov cx, SIZE_AGENCIA
         call read_char
 
-    apontar_banco word [free_index], OFFSET_CONTA
+    apontar_banco word [current_index], OFFSET_CONTA
 
     ; conta
     .read_conta:
@@ -119,22 +138,13 @@ editar_conta:
         jmp .end
     
     .end:
-        ; incrementar o num do index livre
-        inc word [free_index]
-        jmp ler_opcao
+        ret
 
-buscar_conta:
+opt_buscar_conta:
     call clear_screen
 
-    mov si, title_search_cpf
-    call print_ln
-
-    ; ler input
-    mov cx, SIZE_CPF
-    call read_char
-
-    mov word [string1], bx
-    sub word [string1], SIZE_CPF
+    ; prompt cpf
+    call conta.read_cpf
 
     ; encontrar
     call conta.find
@@ -157,11 +167,23 @@ buscar_conta:
 
     .end:
 
-    ;call getchar
-    jmp halt
+    call getchar
+    jmp ler_opcao
 
 conta:
-    ; encontra o index da conta com o cpf salvo em <bx>
+    ; prompta um CPF do usuario e salva em |string1|
+    .read_cpf:
+        mov si, title_search_cpf
+        call print_ln
+
+        ; ler input
+        mov cx, SIZE_CPF
+        call read_char
+
+        mov word [string1], bx
+        sub word [string1], SIZE_CPF
+        jmp .end
+    ; encontra o index da conta com o cpf salvo em |string1|
     ; retorna index em <current_index>, ou -1 caso conta nao exista
     .find:
         ; numero de registros
@@ -173,8 +195,6 @@ conta:
             ; CPF atual em <bx>
             apontar_banco word [current_index], OFFSET_CPF
             mov word [count], SIZE_CPF
-            mov word [string2], bx
-            sub bx, SIZE_CPF + 2
 
             lea si, [bx]
             mov bx, word [string1]
@@ -236,7 +256,7 @@ conta:
 
             ; pular os caracteres do nome (e um delimitador)
             stcolor(COLOR_ALT)
-            apontar_banco word [current_index], OFFSET_AGENCIA
+            apontar_banco word [current_index], OFFSET_AGENCIA        
             mov si, bx
             call print_ln
 
@@ -258,17 +278,27 @@ conta:
     .end:
         ret
     
-cadastro_conta:
+opt_cadastro_conta:
+    push ax
+    mov ax, word [free_index]
+    mov word [current_index], ax
+    pop ax
+
     call editar_conta
+
+    call conta.print
+
+    inc word [free_index]
+
     jmp ler_opcao
 
-del_conta:
+opt_del_conta:
     jmp ler_opcao
 
-list_agencias:
+opt_list_agencias:
     jmp ler_opcao
 
-list_contas_agencias:
+opt_list_contas_agencias:
     jmp ler_opcao
 
 ; salva o que for lido em <bx>
@@ -295,6 +325,7 @@ read_char:
 
     .return:
         stcolor(COLOR_MAIN)
+        mov [bx], word 0
         ret
 
 ; salva char em <al>
@@ -435,7 +466,7 @@ title_search_not_found db 'Conta nao encontrada', 0
 title_search_ok db 'OK', 0
 
 ; reservar espaço do array
-TABLE_COLUMSIZE equ SIZE_NOME + SIZE_CPF + SIZE_AGENCIA + SIZE_CONTA + 6
+TABLE_COLUMSIZE equ 80
 TABLE_ROWSIZE equ 10
 banco_dados resb TABLE_COLUMSIZE * TABLE_ROWSIZE
 
