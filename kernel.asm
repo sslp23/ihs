@@ -8,15 +8,23 @@ jmp 0x0000:_start
 ;
 ; linha: entrada do banco
 ; coluna: informacoes de uma entrada
-%macro apontar_banco 2
+%macro apontar_banco 1
+    push ax
+    mov ax, %1
+    call pointer_banco
+    pop ax
+%endmacro
+pointer_banco:
+    push ax
     mov ax, TABLE_COLUMSIZE ; numero de colunas por linha
-    mov bx, %1 ; linha desejada
+    mov bx, word [current_index] ; linha desejada
     mul bx
 
     mov bx, banco_dados
     add bx, ax ; apontar para linha
-    add bx, %2 ; apontar para coluna
-%endmacro
+    pop ax
+    add bx, ax ; apontar para coluna
+    ret
 
 _start:
     ; setup
@@ -91,7 +99,7 @@ opt_editar_conta:
 ; edita a conta no index |current_index|
 editar_conta:
     ; aponta <bx> para o endereco do banco
-    apontar_banco word [current_index], OFFSET_NOME
+    apontar_banco OFFSET_NOME
     
     ; nome
     .read_nome:
@@ -103,7 +111,7 @@ editar_conta:
         call read_char
 
     ; pular os caracteres do nome (e um delimitador)
-    apontar_banco word [current_index], OFFSET_CPF
+    apontar_banco OFFSET_CPF
     
     ; cpf
     .read_cpf:
@@ -114,7 +122,7 @@ editar_conta:
         mov cx, SIZE_CPF
         call read_char
 
-    apontar_banco word [current_index], OFFSET_AGENCIA
+    apontar_banco OFFSET_AGENCIA
 
     ; agencia
     .read_agencia:
@@ -125,7 +133,7 @@ editar_conta:
         mov cx, SIZE_AGENCIA
         call read_char
 
-    apontar_banco word [current_index], OFFSET_CONTA
+    apontar_banco OFFSET_CONTA
 
     ; conta
     .read_conta:
@@ -135,7 +143,6 @@ editar_conta:
 
         mov cx, SIZE_CONTA
         call read_char
-        jmp .end
     
     .end:
         ret
@@ -193,7 +200,7 @@ conta:
 
         .search_contas:
             ; CPF atual em <bx>
-            apontar_banco word [current_index], OFFSET_CPF
+            apontar_banco OFFSET_CPF
             mov word [count], SIZE_CPF
 
             lea si, [bx]
@@ -232,7 +239,7 @@ conta:
             call print_ln
 
             stcolor(COLOR_ALT)
-            apontar_banco word [current_index], OFFSET_NOME
+            apontar_banco OFFSET_NOME
             mov si, bx
             call print_ln
         
@@ -244,7 +251,7 @@ conta:
 
             ; pular os caracteres do nome (e um delimitador)
             stcolor(COLOR_ALT)
-            apontar_banco word [current_index], OFFSET_CPF
+            apontar_banco OFFSET_CPF
             mov si, bx
             call print_ln
 
@@ -256,7 +263,7 @@ conta:
 
             ; pular os caracteres do nome (e um delimitador)
             stcolor(COLOR_ALT)
-            apontar_banco word [current_index], OFFSET_AGENCIA        
+            apontar_banco OFFSET_AGENCIA        
             mov si, bx
             call print_ln
 
@@ -268,7 +275,7 @@ conta:
 
             ; pular os caracteres do nome (e um delimitador)
             stcolor(COLOR_ALT)
-            apontar_banco word [current_index], OFFSET_CONTA
+            apontar_banco OFFSET_CONTA
             mov si, bx
             call print_ln
 
@@ -465,11 +472,6 @@ title_search_not_found db 'Conta nao encontrada', 0
 
 title_search_ok db 'OK', 0
 
-; reservar espaço do array
-TABLE_COLUMSIZE equ 80
-TABLE_ROWSIZE equ 10
-banco_dados resb TABLE_COLUMSIZE * TABLE_ROWSIZE
-
 SIZE_NOME equ 20
 SIZE_CPF equ 11
 SIZE_AGENCIA equ 5
@@ -479,6 +481,11 @@ OFFSET_NOME    equ 0
 OFFSET_CPF     equ OFFSET_NOME + SIZE_NOME + 2
 OFFSET_AGENCIA equ OFFSET_CPF + SIZE_CPF + 2
 OFFSET_CONTA   equ OFFSET_AGENCIA + SIZE_AGENCIA + 2
+
+; reservar espaço do array
+TABLE_COLUMSIZE equ SIZE_NOME + SIZE_CPF + SIZE_AGENCIA + SIZE_CONTA + 6
+TABLE_ROWSIZE equ 10
+banco_dados resb TABLE_COLUMSIZE * TABLE_ROWSIZE
 
 COLOR_MAIN equ 0ah
 COLOR_ALT equ 07h
