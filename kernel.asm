@@ -67,7 +67,7 @@ ler_opcao:
     cmp al, '0'
     je halt
 
-    jmp begin
+    jmp ler_opcao
 
 ; edita uma conta
 editar_conta:
@@ -120,9 +120,7 @@ editar_conta:
     
     .end:
         ; incrementar o num do index livre
-        mov cx, word [free_index]
-        inc cx
-        mov word [free_index], cx
+        inc word [free_index]
         jmp ler_opcao
 
 buscar_conta:
