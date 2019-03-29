@@ -85,7 +85,7 @@ opt_editar_conta:
     call conta.read_cpf
 
     ; encontrar
-    call conta.find
+    call conta.find_cpf
 
     cmp word [current_index], -1
     je .not_found
@@ -171,7 +171,7 @@ opt_buscar_conta:
     call conta.read_cpf
 
     ; encontrar
-    call conta.find
+    call conta.find_cpf
 
     cmp word [current_index], -1
     je .not_found
@@ -218,7 +218,9 @@ conta:
         mov word [string1], bx
         sub word [string1], SIZE_CPF
         jmp .end
-    ; encontra o index da conta com o cpf salvo em |string1|
+    
+    .find_cpf:
+    ; encontra o index da conta com o campo salvo em |string1|
     ; retorna index em <current_index>, ou -1 caso conta nao exista
     .find:
         ; numero de registros
@@ -336,7 +338,7 @@ opt_del_conta:
     call conta.read_cpf
 
     ; encontrar
-    call conta.find
+    call conta.find_cpf
 
     cmp word [current_index], -1
     je .not_found
@@ -382,6 +384,42 @@ opt_list_agencias:
     jmp ler_opcao
 
 opt_list_contas_agencias:
+    call clear_screen
+
+    ; prompt cpf
+    call conta_bug.read_agencia
+
+    ; encontrar
+    mov cx, word [free_index]
+    dec cx
+    mov word [current_index], cx
+
+    call clear_screen
+
+    .find:
+        call conta_bug.find_agencias
+
+        cmp word [current_index], 0
+        jl .not_found
+        jge .found
+
+        ; conta encontrada
+        .found: 
+            apontar_banco OFFSET_CPF        
+            mov si, bx
+            call print_ln
+            dec word [current_index]
+            jmp .find
+
+        ; conta nao encontrada
+        .not_found:
+            mov si, title_search_agencia_over
+            call print_ln
+            jmp .end
+
+    .end:
+    
+    call getchar
     jmp ler_opcao
 
 ; salva o que for lido em <bx>
@@ -534,6 +572,56 @@ reset_cursor:
     pop ax
     ret
 
+conta_bug:
+; prompta um CPF do usuario e salva em |string1|
+    .read_agencia:
+        mov si, title_search_agencia
+        call print_ln
+
+        ; ler input
+        mov cx, SIZE_AGENCIA
+        call read_char
+
+        mov word [string1], bx
+        sub word [string1], SIZE_AGENCIA
+        jmp .end
+    
+    .find_agencias:
+    ; encontra o index da conta com o campo salvo em |string1|
+    ; retorna index em <current_index>, ou -1 caso conta nao exista
+    .find:
+        .search_contas:
+            ; CPF atual em <bx>
+            apontar_banco OFFSET_AGENCIA
+            mov word [count], SIZE_AGENCIA
+
+            lea si, [bx]
+            mov bx, word [string1]
+            lea di, [bx]
+            dec di
+
+            .for:
+                cmp word [count], 0
+                je .end ; cpf encontrado
+                dec word [count]
+
+                inc di
+                lodsb
+
+                cmp al, [di]
+                je .for
+                jne .next_conta
+
+            .next_conta:
+                dec word [current_index]
+                cmp word [current_index], -1
+                je .end
+                jne .search_contas
+    
+        jmp .end
+    .end:
+        ret
+
 menu db '1 - Cadastrar nova conta', 13, 10, '2 - Buscar conta', 13, 10, '3 - Editar conta', 13, 10, '4 - Deletar conta', 13, 10, '5 - Listar agencias', 13, 10, '6 - Listar contas de uma agencia', 13, 10, '0 - Sair', 13, 10, 0
 
 title_cadastro_nome db 'Nome da conta (20 caracteres):', 0
@@ -544,6 +632,8 @@ title_cadastro_conta db 'Conta (6 digitos):', 0
 title_search_cpf db 'Insira o CPF da conta (11 digitos):', 0
 title_search_not_found db 'Conta nao encontrada', 0
 title_delete_success db 'Conta deletada com sucesso', 0
+title_search_agencia_over db 'Busca esgotada', 0
+title_search_agencia db 'Insira a agencia (5 digitos)', 0
 
 title_search_ok db 'OK', 0
 
