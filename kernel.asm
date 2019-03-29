@@ -294,6 +294,7 @@ conta:
             apontar_banco OFFSET_AGENCIA        
             mov si, bx
             call print_ln
+            ;jmp .end
 
         ; conta
         ; .print_conta:
@@ -363,6 +364,21 @@ opt_del_conta:
     jmp ler_opcao
 
 opt_list_agencias:
+    call clear_screen
+    mov cx, word [free_index]
+    
+    dec cx
+    .for:
+        mov word [current_index], cx
+        apontar_banco OFFSET_AGENCIA        
+        mov si, bx
+        call print_ln
+        dec cx
+        cmp cx, -1
+        jne .for
+
+
+    call getchar
     jmp ler_opcao
 
 opt_list_contas_agencias:
@@ -518,8 +534,6 @@ reset_cursor:
     pop ax
     ret
 
-intro db 'Bem-vindo ao sistema!', 13, 10, 0
-choose db 'Escolha sua opcao: ', 13, 10, 0
 menu db '1 - Cadastrar nova conta', 13, 10, '2 - Buscar conta', 13, 10, '3 - Editar conta', 13, 10, '4 - Deletar conta', 13, 10, '5 - Listar agencias', 13, 10, '6 - Listar contas de uma agencia', 13, 10, '0 - Sair', 13, 10, 0
 
 title_cadastro_nome db 'Nome da conta (20 caracteres):', 0
@@ -552,7 +566,6 @@ COLOR_MAIN equ 0ah
 COLOR_ALT equ 07h
 
 string1 resw 1
-string2 resw 1
 count resw 1
 
 ; index livre para o banco de dados
