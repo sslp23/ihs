@@ -1,4 +1,4 @@
-Entrar na pasta e executar:
+Entrar na pasta onde estão os arquivos e executar:
 
 	chmod +x make.sh
 
