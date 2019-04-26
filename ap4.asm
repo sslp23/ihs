@@ -6,7 +6,7 @@ section .bss
     valor resd 1
     result resd 1
     %macro leibniz 2   
-        shl %1; multiplica o valor de eax por 2 => edx <- 2*edx
+        shl %1; multiplica o valor de eax por 2 => eax <- 2*eax
         mov dword[valor], %1; move valor de eax (2*i) na memória
         fld dword[valor]; coloca valor (2*i) na pilha
 
