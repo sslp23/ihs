@@ -8,7 +8,7 @@
      
    `./compile_ap4.sh`  
    
-  ## **Observações**
+  # Observações
 
    * Falta executar e testar se o algoritmo está funcionando
    * Implementar função de printf e receber parâmetro de precisão do usuário
