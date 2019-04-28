@@ -1,4 +1,4 @@
-# Instruções  (Linux-only)  
+# Instruções  (linux-only)  
 
    ➡ Para compilar o programa, entre na pasta AP4 e garanta permissão ao script:  
      
