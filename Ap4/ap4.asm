@@ -4,8 +4,11 @@ section .data
     limite equ 1000
     i db 0 
     um dw 1
-    ask dq 'Insira a precisao: ', 0
-    answer dq 'O valor calculado foi : %.5f', 13, 10, 0
+    ask: db 'Calculadora de Pi pela Serie de Taylor!', 0
+    answer: db 'O valor achado foi: ', 0
+    fmt:    db "%s", 10, 0 ; printf format string follow by a newline(10) and a null terminator(0), "\n",'0'
+    fmt2: db "%f", 13, 10, 0
+    integer: db "%d", 10, 0
 section .bss
     valor resd 1
     result resd 1
@@ -25,18 +28,23 @@ section .bss
 
         mov eax, dword[valor]; Comprime o valor de 64 bits para 32 bits e move para eax
         add dword[result], eax; usa o endereço de result como acumulador
-        
+    
     %endmacro
 
 ;daqui pra baixo, TOP (sergio)
 section .text
+    global main
+main:
     finit; Inicializa a pilha
-    push dword ask
+    push ask
+    push fmt
     call printf
+    add esp, 8
     mov ecx, limite; quantidade de iterações 
     mov dword[result], 0 ;Seta o valor de result para 0
+
     leibniz_serie:
-        mov ebx, limite; ebx <- limite
+        mov eax, limite ; 
         sub eax, ecx; eax(valor de i) <- eax - ecx(contador)
         
         mov ebx, eax; passa valor de eax para ebx
@@ -46,16 +54,24 @@ section .text
 
         mov edx, 1
         back: ;volta da negacao (se negou neh)
-        leibniz edx, eax ;chama o esgoto (macro)
+            leibniz edx, eax ;chama o esgoto (macro)
         loop leibniz_serie ;loop top
-    print_result:
-        ;printar valor calculado
-    fim_serie:
-        mov eax, 1
-        mov ebx, 0
-        int 80h; retorna 0 para o sistema operacional (se não, deveria)
 
+    jmp print_result
     set_i_neg:
         mov edx, 1
         neg edx
         jmp back
+    
+    print_result:    
+        push answer
+        push fmt
+        call printf
+        add esp, 8
+        push dword[result]
+        push fmt2
+        call printf
+        add esp, 8
+
+    mov eax, 0
+ret        
