@@ -59,7 +59,7 @@ static ssize_t char_device_read(struct file *filep, char *buf, size_t len, loff_
     if(len == INBUTT)
       entrada = ioread16(butt); //recebeu a entrada do botao
     else
-      entrada = ioread16(inport) //recebeu a entrada do switch
+      entrada = ioread16(inport); //recebeu a entrada do switch
     put_user(switches & 0xFF, buf++);
     put_user((switches >> 8) & 0xFF, buf++);
     len -= 2;
@@ -82,7 +82,7 @@ static ssize_t char_device_write(struct file *filep, const char *buf, size_t len
     iowrite32(k, bcd1);
   }
   if(len == OUTLED){
-    iowrite32(k, led)
+    iowrite32(k, led);
   }
   return count;
 }
@@ -132,9 +132,9 @@ static int pci_probe(struct pci_dev *dev, const struct pci_device_id *id) {
 
   hexport = ioremap_nocache(resource + 0XC000, 0x20);
   inport  = ioremap_nocache(resource + 0XC020, 0x20);
-  butt = ioremap_nocache(resource + 0XC080, 0x20)
-  bcd1 = ioremap_nocache(resource + 0XC040, 0x20)
-  led = ioremap_nocache(resource + 0XC060, 0x20)
+  butt = ioremap_nocache(resource + 0XC080, 0x20);
+  bcd1 = ioremap_nocache(resource + 0XC040, 0x20);
+  led = ioremap_nocache(resource + 0XC060, 0x20);
 
   return 0;
 }
