@@ -60,8 +60,8 @@ static ssize_t char_device_read(struct file *filep, char *buf, size_t len, loff_
       entrada = ioread16(butt); //recebeu a entrada do botao
     else
       entrada = ioread16(inport); //recebeu a entrada do switch
-    put_user(switches & 0xFF, buf++);
-    put_user((switches >> 8) & 0xFF, buf++);
+    put_user(entrada & 0xFF, buf++);
+    put_user((entrada >> 8) & 0xFF, buf++);
     len -= 2;
   }
 
