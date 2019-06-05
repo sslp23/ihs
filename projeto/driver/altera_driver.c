@@ -83,7 +83,7 @@ static ssize_t char_device_read(struct file *filep, char *buf, size_t opcao, lof
   }
 
   if(control = 1){//é pra ler o botao/switch
-    copy_to_user(buf, &entrada, sizeof(uint32_t))  
+    copy_to_user(buf, &entrada, sizeof(uint32_t));  
     printk(KERN_ALERT "mandou: %d", entrada);
     control = 0;
     return 4;
