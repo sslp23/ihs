@@ -10,6 +10,7 @@
 #define OUTLED  3 //saida dos leds
 #define OUTHEX1 4 //saida do bcd
 #define OUTHEX2 5 //saida do bcd2
+#define OUTLEDG 6 //saida do led verde
 
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION("Basic Driver PCIHello");
@@ -22,6 +23,7 @@ static void *bcd1; //bcd 2
 static void *inport;   // handle to 16-bit input PIO (switch)
 static void *butt; // botoes
 static void *led; // leds
+static void *ledverde; //led verde
 
 //-- Char Driver Interface
 static int   access_count =  0;
@@ -81,7 +83,7 @@ static ssize_t char_device_read(struct file *filep, char *buf, size_t opcao, lof
   }
 
   if(control = 1){//é pra ler o botao/switch
-    copy_to_user(buf, &entrada, sizeof(uint32_t));  
+    copy_to_user(buf, &entrada, sizeof(uint32_t))  
     printk(KERN_ALERT "mandou: %d", entrada);
     control = 0;
     return 4;
@@ -106,6 +108,10 @@ static ssize_t char_device_write(struct file *filep, const char *buf, size_t opc
       break;
     case OUTLED:
       iowrite32(entrada, led); //sai pros leds
+      break;
+    case OUTLEDG:
+      iowrite32(entrada, ledverde); //sai pro led verde
+      break;
     default:
       printk(KERN_ALERT "Erro!\n");
       return -1; // send error to user space
@@ -158,11 +164,11 @@ static int pci_probe(struct pci_dev *dev, const struct pci_device_id *id) {
   printk(KERN_ALERT "altera_driver: Resource start at bar 0: %lx\n", resource);
 
   hexport = ioremap_nocache(resource + 0XC000, 0x20);
-  inport  = ioremap_nocache(resource + 0XC020, 0x20);
+  inport  = ioremap_nocache(resource + 0XC040, 0x20);
   butt = ioremap_nocache(resource + 0XC080, 0x20);
-  bcd1 = ioremap_nocache(resource + 0XC040, 0x20);
-  led = ioremap_nocache(resource + 0XC060, 0x20);
-
+  bcd1 = ioremap_nocache(resource + 0XC0140, 0x20);
+  led = ioremap_nocache(resource + 0XC0F0, 0x20);
+  ledverde = ioremap_nocache(resource + 0XC0B0, 0x20);
   return 0;
 }
 
@@ -172,6 +178,7 @@ static void pci_remove(struct pci_dev *dev) {
   iounmap(butt);
   iounmap(bcd1);
   iounmap(led);
+  iounmap(ledverde);
 }
 
 
