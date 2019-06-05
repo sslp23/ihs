@@ -6,14 +6,14 @@
 #include <asm/uaccess.h>
 
 #define INBUTT 1 // a entrada é pelos botoes
-#define OUTLED 3 //saida dos leds
-#define INSWITCH 4 // a entrada é pelos switches
-#define OUTHEX1 5 //saida do bcd
-#define OUTHEX2 6 //saida do bcd2
+#define INSWITCH 2 // a entrada é pelos switches
+#define OUTLED  3 //saida dos leds
+#define OUTHEX1 4 //saida do bcd
+#define OUTHEX2 5 //saida do bcd2
 
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION("Basic Driver PCIHello");
-MODULE_AUTHOR("Patrick Schaumont");
+MODULE_AUTHOR("sergio pessoa (com fortes inspiracoes!)");
 
 //-- Hardware Handles
 
@@ -27,6 +27,11 @@ static void *led; // leds
 static int   access_count =  0;
 static int   MAJOR_NUMBER = 91;
 
+static int   control = 0; // faz a verificacao de escrita
+static int   switch_on = 0; //pega os ultimos switches apertados
+static int   butt_on = 0; //pega os ultimos botoes apertados
+
+
 static int     char_device_open    ( struct inode * , struct file *);
 static int     char_device_release ( struct inode * , struct file *);
 static ssize_t char_device_read    ( struct file * , char *,       size_t , loff_t *);
@@ -36,7 +41,7 @@ static struct file_operations file_opts = {
       .read = char_device_read,
       .open = char_device_open,
      .write = char_device_write,
-   .release = char_device_release
+   .release = char_device_release 
 };
 
 static int char_device_open(struct inode *inodep, struct file *filep) {
@@ -50,41 +55,63 @@ static int char_device_release(struct inode *inodep, struct file *filep) {
    return 0;
 }
 
-static ssize_t char_device_read(struct file *filep, char *buf, size_t len, loff_t *off) {
-  short entrada;
+static ssize_t char_device_read(struct file *filep, char *buf, size_t opcao, loff_t *off) {
+  uint32_t entrada = 0;
 
-  size_t count = len;
-  //  printk(KERN_ALERT "altera_driver: read %d bytes\n", len);
-  while (len > 0) {
-    if(len == INBUTT)
-      entrada = ioread16(butt); //recebeu a entrada do botao
-    else
-      entrada = ioread16(inport); //recebeu a entrada do switch
-    put_user(entrada & 0xFF, buf++);
-    put_user((entrada >> 8) & 0xFF, buf++);
-    len -= 2;
+  switch(opcao){
+    case INSWITCH:
+      entrada = ioread32(inport);
+      if(entrada != switch_on){ //controla a leitura do switch
+        control = 1;
+      }
+      switch_on = entrada;
+      break;
+
+    case INBUTT:
+      entrada = ioread32(butt);
+      if(entrada != butt_on){
+        control = 1;
+      }
+      butt_on = entrada;
+      break;
+
+    default:
+      printk(KERN_ALERT "Erro!\n");
+      return -1; // send error to user space
   }
 
-  return count;
+  if(control = 1){//é pra ler o botao/switch
+    copy_to_user(buf, &entrada, sizeof(uint32_t))  
+    printk(KERN_ALERT "mandou: %d", entrada);
+    control = 0;
+    return 4;
+  }
+  else{
+    return 0;
+  } 
+
 }
 
-static ssize_t char_device_write(struct file *filep, const char *buf, size_t len, loff_t *off) {
-  char *ptr = (char *) buf;
-  size_t count = len;
-  short b = 0;
-  //  printk(KERN_ALERT "altera_driver: write %d bytes\n", len);
-  unsigned k = *((int *) ptr);
-  
-  if(len == OUTHEX1){
-    iowrite32(k, hexport);
+static ssize_t char_device_write(struct file *filep, const char *buf, size_t opcao, loff_t *off) {
+  uint32_t entrada = 0;
+
+  copy_from_user(&entrada, buf, sizeof(uint32_t)); //pega o dado do kernel
+
+  switch(opcao){
+    case OUTHEX1:
+      iowrite32(entrada, hexport); //sai pro primeiro bcd
+      break;
+    case OUTHEX2:
+      iowrite32(entrada, bcd1); //sai pro segundo bcd
+      break;
+    case OUTLED:
+      iowrite32(entrada, led); //sai pros leds
+    default:
+      printk(KERN_ALERT "Erro!\n");
+      return -1; // send error to user space
   }
-  if(len == OUTHEX2){
-    iowrite32(k, bcd1);
-  }
-  if(len == OUTLED){
-    iowrite32(k, led);
-  }
-  return count;
+  printk(KERN_ALERT "Escreveu: %d", entrada);
+  return 4;
 }
 
 //-- PCI Device Interface
