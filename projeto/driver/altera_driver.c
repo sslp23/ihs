@@ -101,7 +101,7 @@ static ssize_t char_device_write(struct file *filep, const char *buf, size_t opc
 
   switch(opcao){
     case OUTLEDR:
-      iowrite32(entrada, ledverde); //sai pros leds
+      iowrite32(entrada, led); //sai pros leds
       printk(KERN_ALERT "Escreveu Led Vermelho: %d", entrada);
       break;
     case OUTHEX1:
@@ -114,7 +114,7 @@ static ssize_t char_device_write(struct file *filep, const char *buf, size_t opc
       break;
     case OUTLEDG:
       printk(KERN_ALERT "Escreveu Led Verd: %d", entrada);
-      iowrite32(entrada, led); //sai pro led verde
+      iowrite32(entrada, ledverde); //sai pro led verde
       break;
     default:
       printk(KERN_ALERT "Erro!\n");
