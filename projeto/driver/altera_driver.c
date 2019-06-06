@@ -7,7 +7,7 @@
 
 #define INBUTT 1 // a entrada é pelos botoes
 #define INSWITCH 2 // a entrada é pelos switches
-#define OUTLED  3 //saida dos leds
+#define OUTLEDR 3 //saida dos leds
 #define OUTHEX1 4 //saida do bcd
 #define OUTHEX2 5 //saida do bcd2
 #define OUTLEDG 6 //saida do led verde
@@ -100,23 +100,27 @@ static ssize_t char_device_write(struct file *filep, const char *buf, size_t opc
   copy_from_user(&entrada, buf, sizeof(uint32_t)); //pega o dado do kernel
 
   switch(opcao){
+    case OUTLEDR:
+      iowrite32(entrada, ledverde); //sai pros leds
+      printk(KERN_ALERT "Escreveu Led Vermelho: %d", entrada);
+      break;
     case OUTHEX1:
+      printk(KERN_ALERT "Escreveu BCD1: %d", entrada);
       iowrite32(entrada, hexport); //sai pro primeiro bcd
       break;
     case OUTHEX2:
+      printk(KERN_ALERT "Escreveu BCD2: %d", entrada);
       iowrite32(entrada, bcd1); //sai pro segundo bcd
       break;
-    case OUTLED:
-      iowrite32(entrada, led); //sai pros leds
-      break;
     case OUTLEDG:
-      iowrite32(entrada, ledverde); //sai pro led verde
+      printk(KERN_ALERT "Escreveu Led Verd: %d", entrada);
+      iowrite32(entrada, led); //sai pro led verde
       break;
     default:
       printk(KERN_ALERT "Erro!\n");
       return -1; // send error to user space
   }
-  printk(KERN_ALERT "Escreveu: %d", entrada);
+  
   return 4;
 }
 
