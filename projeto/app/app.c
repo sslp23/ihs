@@ -11,17 +11,20 @@ int main() {
 
   int dev = open("/dev/de2i150_altera", O_RDWR);
 
-  for (i=0; i>-1; i++) {
-    read(dev, &j, 4);
+  for(i=0; i>-1; i++) {
+    read(dev, &j, 2);
+    
+    write(dev, &j, 3);
+    write(dev, &j, 3);
     k = hexdigit[j & 0xF]
       | (hexdigit[(j >>  4) & 0xF] << 8)
       | (hexdigit[(j >>  8) & 0xF] << 16)
       | (hexdigit[(j >> 12) & 0xF] << 24);
     k = ~k;
     write(dev, &k, 4);
-  }
+    write(dev, &k, 4);
+}
 
   close(dev);
   return 0;
 }
-
