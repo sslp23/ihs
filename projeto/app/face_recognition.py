@@ -49,7 +49,7 @@ while(True):
         cv2.rectangle(frame, (x, y), (end_cord_x, end_cord_y), (255, 0 , 200), rectangle_thickness)
 
     # Printa a imagem que está sendo lida para a Webcam
-    cv2.imshow('Look, a nigger!', frame) # Mudar nome da janela
+    cv2.imshow('Look, a ginger!', frame) # Mudar nome da janela
 
     # Aguarda o comando para finalizar o programa
     if cv2.waitKey(20) & 0xFF == ord('q'):
