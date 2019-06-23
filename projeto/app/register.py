@@ -5,7 +5,7 @@ import os
 import threading
 
 from PIL import Image
-photos_limit = 450
+photos_limit = 300
 
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt2.xml')
 
@@ -24,7 +24,7 @@ while confirmation[0] is 'n' or confirmation[0] is not 's':
 images_directory = os.getcwd()
 print(images_directory)
 
-images_directory = images_directory + "/Images/" + new_user
+images_directory = images_directory + "/Images/" + str(new_user) + '/'
 print(images_directory)
 
 
@@ -48,22 +48,27 @@ while(pictures_confirm):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.5, minNeighbors=5)
     for(x, y, w, h) in faces:
-        region_of_interest_colored = frame[y:y+h, x:x+w]
+        region_of_interest = frame[y:y+h, x:x+w]
         rectangle_thickness = 2
         rectangle_color = (0, 255, 0)
         end_cord_x = x + w
         end_cord_y = y + h
         cv2.rectangle(frame, (x, y), (end_cord_x, end_cord_y), rectangle_color, rectangle_thickness)
+        save_image = "image" + str(photos_taken) + ".png"
+        print(save_image)
+        cv2.imwrite("Images/" + new_user + "/" + save_image, frame)
+        photos_taken += 1
 
-    cv2.imshow('Novo usuário', frame)
-    save_image = "image" + str(photos_taken) + ".png"
-    
-    if cv2.waitKey(20) & 0xFF == ord('q') | photos_taken == photos_limit:
+    cv2.imshow('Novo usuario', frame)
+    if cv2.waitKey(20) & 0xFF == ord('q') or photos_taken == photos_limit:
         break
 
 capture.release()
 cv2.destroyAllWindows()
-raw_input("O programa terminou. Pressione ENTER para sair...")
+print("Leitura completa! O usuário " + new_user + " foi cadastrado com sucesso!")
+raw_input("Agora o programa irá realizar a atualização do banco de dados. Pressione ENTER para continuar...")
+os.system('python faces_train.py')
+raw_input("A atualização terminou. Pressione ENTER para sair...")
 
 
 
