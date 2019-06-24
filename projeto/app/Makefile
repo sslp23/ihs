@@ -4,7 +4,7 @@
 #
 
 app: app.c
-	$(CC) app.c -o app
+	$(CC) -fopenmp app.c -o app
 	# cp app /opt/tftp
 
 clean:
