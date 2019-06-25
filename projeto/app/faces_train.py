@@ -9,7 +9,7 @@ from PIL import Image
 AI_security_recognizer = cv2.face.LBPHFaceRecognizer_create() 
 
 # Importando mesmo Haar Cascade
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt2.xml')
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 eyes_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 
 # Serve para guardar o id que está sendo acessado
@@ -34,7 +34,7 @@ for root, dirs, files in os.walk(image_dir):
             path = os.path.join(root, file)
 
             # Pega o nome do arquivo 
-            label = os.path.basename(os.path.dirname(path)).replace(" ", "-").lower()
+            label = os.path.basename(os.path.dirname(path))
 
             # Printa a pasta onde o arquivo está e o caminho do arquivo a ser acessado
             # print(label, path)
@@ -59,7 +59,7 @@ for root, dirs, files in os.walk(image_dir):
             pil_image = Image.open(path).convert("L") 
 
             # Resolução do meu computador
-            resolution = (640, 480)
+            resolution = (550, 550)
 
             # Redimensiona imagem para ficar compatível com Webcam
             final_image = pil_image.resize(resolution, Image.ANTIALIAS)
@@ -70,8 +70,8 @@ for root, dirs, files in os.walk(image_dir):
             # Printa o array da imagem
             # print(image_array)
 
-            #  Mesmo procedimento do faces_recognition.py          
-            faces = face_cascade.detectMultiScale(image_array, scaleFactor=1.5, minNeighbors=5)
+            #  Mesmo procedimento do faces_recognition.py       
+            faces = face_cascade.detectMultiScale(image_array, scaleFactor=1.3, minNeighbors=5)
             
             for(x, y, w, h) in faces:
                 region_of_interest = image_array[y:y+h, x:x+w]

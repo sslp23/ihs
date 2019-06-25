@@ -5,11 +5,9 @@ import os
 import threading
 
 from PIL import Image
-photos_limit = 300
+photos_limit = 50
 
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt2.xml')
-
-pictures_confirm = True
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 
 new_user = raw_input("Insira o nome do usuário a ser cadastrado: ")
 
@@ -31,10 +29,10 @@ print(images_directory)
 try:
     os.makedirs(images_directory)
 except OSError:
-    print("Ocorreu um erro ao criar usuário. Verifique se o nome já está sendo, se há caracteres inválidos no nome usado ou se não há espaço suficiente. O programa será abortado.")
+    print("Ocorreu um erro ao criar usuário. Verifique se o nome já está sendo, se há caracteres inválidos no nome usado ou se há espaço suficiente. O programa será abortado.")
     exit(1)
 else:
-    print("O usuario de nome", new_user, "foi cadastrado com sucesso!")    
+    print("O usuario de nome", new_user, "foi cadastrado com sucesso!")         
 
 
 print("O programa irá retirar algumas fotos do usuário para o reconhecimento facial. O usuário precisa se posicionar em frente a câmera.")
@@ -43,10 +41,10 @@ raw_input("Pressione ENTER para continuar...")
 capture = cv2.VideoCapture(0)
 
 photos_taken = 0
-while(pictures_confirm):
+while(True):
     ret, frame = capture.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.5, minNeighbors=5)
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
     for(x, y, w, h) in faces:
         region_of_interest = frame[y:y+h, x:x+w]
         rectangle_thickness = 2
@@ -56,7 +54,7 @@ while(pictures_confirm):
         cv2.rectangle(frame, (x, y), (end_cord_x, end_cord_y), rectangle_color, rectangle_thickness)
         save_image = "image" + str(photos_taken) + ".png"
         print(save_image)
-        cv2.imwrite("Images/" + new_user + "/" + save_image, frame)
+        cv2.imwrite("Images/" + new_user + "/" + save_image, region_of_interest)
         photos_taken += 1
 
     cv2.imshow('Novo usuario', frame)
