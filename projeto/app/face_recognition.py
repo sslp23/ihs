@@ -8,8 +8,10 @@ from collections import Counter
 import threading
 import sys
 import time
+import os
+import datetime
 
-
+now = datetime.datetime.now()
 CONFIDENCE_RATIO = 45
 
 def most_frequent(List):
@@ -30,7 +32,7 @@ with open("labels.pickle", 'rb') as f:
     labels = {v:k for k, v in og_labels.items()}
 
 # Carrega a Cascade para a detecção de rostos 
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt2.xml')
 
 SECURITY_RECOGNIZER = cv2.face.LBPHFaceRecognizer_create()
 SECURITY_RECOGNIZER.read("trainer.yml")
@@ -40,7 +42,6 @@ cap = cv2.VideoCapture(0)
 
 
 while(True):
-    end = time.time()
     # Passa para ret e frame os valores que estão sendo lidos pela WebCam
     ret, frame = cap.read()
 
@@ -93,13 +94,28 @@ while(True):
     # Printa a imagem que está sendo lida para a Webcam
     cv2.imshow('Look, a ginger!', frame) # Mudar nome da janela
 
+    end = time.time()
+
     # Aguarda o comando para finalizar o programa
     if cv2.waitKey(20) & 0xFF == ord('q') or (end - begin >= 10.0):
         break
-    
-print("Bem vindo, " + labels[most_frequent(frequency)] + "!")
 
-# Finaliza a gravação de vídeo 
+user_now = labels[most_frequent(frequency)]    
+
+
+if labels[id_] in open("logged.txt").read():
+    print("Usuário " + user_now + " já está presente! Tentativa de invasão confirmada!")
+    with open("logged.txt", "w") as myfile:
+        myfile.write("Tentativa de invasão em nome de " + user_now  +" as " + now.isoformat() + '\n')
+else:
+    with open("logged.txt", "w") as myfile:
+        myfile.write("O usuário ")
+        myfile.write(user_now)
+        myfile.write(" acabou de entrar as ")
+        myfile.write(now.isoformat())
+        myfile.write('\n')
+
+# Finaliza a gravação de vídeo t
 cap.release()
 
 # Fecha todas as janelas e finaliza o programa logo após
