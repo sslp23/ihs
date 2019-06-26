@@ -5,9 +5,12 @@ import os
 import threading
 
 from PIL import Image
-photos_limit = 50
+photos_limit = 150
 
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+
+# Verifica a integridade do CPF
+
+face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt2.xml')
 
 new_user = raw_input("Insira o nome do usuário a ser cadastrado: ")
 
@@ -25,7 +28,6 @@ print(images_directory)
 images_directory = images_directory + "/Images/" + str(new_user) + '/'
 print(images_directory)
 
-
 try:
     os.makedirs(images_directory)
 except OSError:
@@ -34,6 +36,17 @@ except OSError:
 else:
     print("O usuario de nome", new_user, "foi cadastrado com sucesso!")         
 
+
+cpf = raw_input("Insira o CPF: ")
+
+with open("workers.txt", "w") as workers:
+    descript_name = "Nome" + new_user + "\n"
+    workers.write("Nome: ")
+    workers.write(new_user)
+    workers.write("\n")
+    workers.write("CPF: ")
+    workers.write(cpf)
+    workers.write("\n\n")
 
 print("O programa irá retirar algumas fotos do usuário para o reconhecimento facial. O usuário precisa se posicionar em frente a câmera.")
 raw_input("Pressione ENTER para continuar...")
@@ -53,7 +66,7 @@ while(True):
         end_cord_y = y + h
         cv2.rectangle(frame, (x, y), (end_cord_x, end_cord_y), rectangle_color, rectangle_thickness)
         save_image = "image" + str(photos_taken) + ".png"
-        print(save_image)
+        print(save_image)   
         cv2.imwrite("Images/" + new_user + "/" + save_image, region_of_interest)
         photos_taken += 1
 
@@ -67,7 +80,7 @@ print("Leitura completa! O usuário " + new_user + " foi cadastrado com sucesso!
 raw_input("Agora o programa irá realizar a atualização do banco de dados. Pressione ENTER para continuar...")
 os.system('python faces_train.py')
 raw_input("A atualização terminou. Pressione ENTER para sair...")
-
+workers.close()
 
 
 
