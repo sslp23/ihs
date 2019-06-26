@@ -253,6 +253,7 @@ int main() {
 								if(j==SENHA){	
 									verify = 1;
 									not_invade = 1;
+									acertou = 1;
 									break;
 								}
 							}
@@ -346,12 +347,6 @@ int main() {
   write(dev, &xd, 4);
   write(dev, &xd, 4);
   
-  countINVADER=0;
-		xd = hexdigit[countINVADER & 0xF]
-			| (hexdigit[(countINVADER >> 4) & 0xF] << 8)
-			| (hexdigit[(countINVADER >> 8) & 0xF] << 16)
-			| (hexdigit[(countINVADER >> 12) & 0xF] << 24);
-		xd = ~xd;
   write(dev, &xd, 5);
   write(dev, &xd, 5);
   

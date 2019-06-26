@@ -63,7 +63,7 @@ static ssize_t char_device_read(struct file *filep, char *buf, size_t opcao, lof
   switch(opcao){
     case INSWITCH:
       entrada = ioread32(inport);
-      if(entrada != switch_on && entrada !=0){ //controla a leitura do switch
+      if(entrada != switch_on){ //controla a leitura do switch
         control = 1;
       }
       switch_on = entrada;
